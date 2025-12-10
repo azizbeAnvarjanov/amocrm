@@ -10,7 +10,21 @@ async function getExamLeads() {
   const pipelineId = 10365242;
   const statusId = 81956042;
 
-  const url = `https://${AMO_DOMAIN}/api/v4/leads?with=contacts&filter[pipeline_id]=${pipelineId}&filter[statuses][0][status_id]=${statusId}`;
+  // Filtrni eng aniq shakli: pipeline ID bo'yicha filter keyin STATUSLAR filteri 82091110, 81956042
+  // Status ID ni to'g'ridan-to'g'ri pipeline ID bilan birga berish
+  // API filtrlashning eng aniq usulidir.
+
+  // NOTE: Barcha kerakli bitimlarni olish uchun faqatgina status_id ni qo'yishga harakat qilamiz,
+  // chunki pipeline_id tashqarida ko'rsatilgan.
+  // Agar bu ham ishlamasa, ikkinchi variantni ko'ramiz.
+  // const url = `https://${AMO_DOMAIN}/api/v4/leads?with=contacts&filter[pipeline_id]=${pipelineId}&filter[statuses]=${statusId}`;
+  const url = `https://${AMO_DOMAIN}/api/v4/leads?with=contacts&filter[statuses][0][pipeline_id]=${pipelineId}&filter[statuses][0][status_id]=${statusId}`;
+
+  // --- Agar yuqoridagi kod ham ishlamasa, buni sinab ko'ring: ---
+  /*
+  const url = `https://${AMO_DOMAIN}/api/v4/leads?with=contacts&filter[statuses][0][pipeline_id]=${pipelineId}&filter[statuses][0][status_id]=${statusId}`;
+  */
+  // ---
 
   const res = await fetch(url, {
     headers: {
@@ -19,9 +33,16 @@ async function getExamLeads() {
     },
   });
 
-  if (!res.ok) throw new Error("AmoCRM API error");
+  if (!res.ok) {
+    // Debug uchun xatolikni logga yozish
+    const errorText = await res.text();
+    console.error("AmoCRM API xatosi:", errorText);
+    throw new Error(`AmoCRM API xatosi: ${res.status} ${res.statusText}`);
+  }
 
-  return (await res.json())._embedded.leads ?? [];
+  const data = await res.json();
+  // data._embedded mavjudligini tekshirish muhim
+  return data._embedded?.leads ?? [];
 }
 
 async function getContact(contactId) {
@@ -51,7 +72,7 @@ async function insertToSupabase(list) {
   });
 
   if (!res.ok) {
-    console.log(await res.text());
+    // console.log(await res.text());
     throw new Error("Supabase insert error");
   }
 }
@@ -59,7 +80,7 @@ async function insertToSupabase(list) {
 export async function POST() {
   try {
     const leads = await getExamLeads();
-    console.log("LEADS:", leads);
+    console.log("LEADS az:", JSON.stringify(leads, null, 2));
 
     const formatted = [];
 
@@ -77,10 +98,17 @@ export async function POST() {
         phone = phoneField?.values?.[0]?.value || null;
       }
 
+      // 🔥 LEAD'DAN SERIYA RAQAMI
+      const seriaField = lead.custom_fields_values?.find(
+        (f) => f.field_id === 908740 || f.field_name === "Seriya raqami"
+      );
+      const seria = seriaField?.values?.[0]?.value || null;
+
       formatted.push({
         amo_id: lead.id,
         name: lead.name,
         phone,
+        seria,
         status: "imtihonga keladi",
       });
     }

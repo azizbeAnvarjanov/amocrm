@@ -1,4 +1,8 @@
+import CallStats from "@/components/CallStats";
+import DailyCallStats from "@/components/DailyCallStats";
 import ImportButton from "@/components/ImportButton";
+import PipelinesAccordion from "@/components/PipelinesAccordion";
+import PipelineStatusFetcher from "@/components/PipelineStatusFetcher";
 import UpdateButton from "@/components/UpdateButton";
 import React from "react";
 
@@ -7,10 +11,14 @@ const Home = () => {
     <div>
       Home
       <ImportButton />
-
-
       <p>Update Button</p>
       <UpdateButton />
+      <hr />
+      <PipelineStatusFetcher />
+      <hr />
+      <PipelinesAccordion />
+      <hr />
+      <DailyCallStats />
     </div>
   );
 };
