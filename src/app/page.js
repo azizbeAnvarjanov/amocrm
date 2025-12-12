@@ -1,5 +1,3 @@
-import CallStats from "@/components/CallStats";
-import DailyCallStats from "@/components/DailyCallStats";
 import ImportButton from "@/components/ImportButton";
 import PipelinesAccordion from "@/components/PipelinesAccordion";
 import PipelineStatusFetcher from "@/components/PipelineStatusFetcher";
@@ -17,8 +15,6 @@ const Home = () => {
       <PipelineStatusFetcher />
       <hr />
       <PipelinesAccordion />
-      <hr />
-      <DailyCallStats />
     </div>
   );
 };
